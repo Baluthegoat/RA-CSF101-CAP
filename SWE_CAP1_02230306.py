@@ -9,8 +9,8 @@
 # https://codereview.stackexchange.com/questions/281633/calculate-score-of-rock-paper-scissors-advent-of-code-2022-day-2
 ##############################
 # Solution
-#
-#
+# Your Solution Score: 19998
+# 
 ###############################
 
 # Define the mapping between letters and moves
@@ -72,22 +72,3 @@ def read_input():
 
 # Call the read_input function to start the game
 read_input()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
