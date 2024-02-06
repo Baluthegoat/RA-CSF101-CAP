@@ -1,237 +1,128 @@
-import turtle
+import pygame
 import time
 import random
 
-delay = 0.1
+pygame.init()
 
-# Score
-score = 0
-high_score = 0
+white = (255,255,255)
+black = (0,0,0)
+red = (255,0,0)
+green = (0,255,0)
+blue = (0,0,255)
+purple = (128,0,128)
 
-# Set up the screen
-wn = turtle.Screen()
-wn.title("Snake Game by @TokyoEdTech")
-wn.bgcolor("green")
-wn.setup(width=600, height=600)
-wn.tracer(0)  # Turns off the screen updates
+display_width = 800
+display_height = 600
 
-# Start Button
-start_button = turtle.Turtle()
-start_button.speed(0)
-start_button.color("white")
-start_button.penup()
-start_button.goto(0, 0)
-start_button.write("Press 'Enter' to Start", align="center", font=("Courier", 24, "normal"))
-start_button.hideturtle()
+clock = pygame.time.Clock()
+fps = 8  # Reduced speed
+block_size = 50
 
-# Snake head
-head = turtle.Turtle()
-head.speed(2)
-head.shape("square")
-head.color("black")
-head.penup()
-head.goto(0, 0)
-head.direction = "stop"
+font = pygame.font.SysFont(None, 25)
 
-# Snake food
-food = turtle.Turtle()
-food.speed(0)
-food.shape("circle")
-food.color("red")
-food.penup()
-food.goto(0, 100)
-segments = []
+def snake(block_size, snakeList, snakeHead, lead_x, lead_y):
+    for XnY in snakeList:
+        pygame.draw.rect(gameDisplay, purple, [XnY[0],XnY[1],block_size,block_size])
+    pygame.draw.rect(gameDisplay, red, [snakeHead[0],snakeHead[1],block_size,block_size])  # Draw snake head
 
-# Pen
-pen = turtle.Turtle()
-pen.speed(0)
-pen.shape("square")
-pen.color("white")
-pen.penup()
-pen.hideturtle()
-pen.goto(0, 260)
-pen.write("Score: 0  High Score: 0", align="center", font=("Courier", 24, "normal"))
+def message_to_screen(msg,color,x,y):
+    screen_text = font.render(msg, True, color)
+    gameDisplay.blit(screen_text, [x,y])
 
-# function to detect collision 
-def is_collision(t1, t2):
-    distance = t1.distance(t2)
-    if distance < 20:
-        return True
-    else:
-        return False
+gameDisplay = pygame.display.set_mode((800,600))
+pygame.display.set_caption("Slithery Snake")
 
-# function to change the color of the food    
-def change_food_color():
-    colors = ["red", "blue", "yellow", "black", "white", "pink"]
-    new_color = random.choice(colors)
-    food.color(new_color)
+def gameLoop():
+    gameExit = False
+    gameOver = False
 
-# function to change the color of the snake head 
-def change_head_color():
-    colors = ["red", "blue", "yellow", "black", "white", "pink"]
-    new_color = random.choice(colors)
-    head.color(new_color)
+    lead_x = display_width/2
+    lead_y = display_height/2
+    lead_x_change = 0
+    lead_y_change = 0
 
-# Functions
-def go_up():
-    if head.direction != "down":
-        head.direction = "up"
+    snakeList = []
+    snakeLength = 1
 
-def go_down():
-    if head.direction != "up":
-        head.direction = "down"
+    score = 0
 
-def go_left():
-    if head.direction != "right":
-        head.direction = "left"
+    randAppleX = round(random.randrange(0, display_width - block_size)/block_size)*block_size
+    randAppleY = round(random.randrange(0, display_height - block_size)/block_size)*block_size
 
-def go_right():
-    if head.direction != "left":
-        head.direction = "right"
+    food_color = green  # Initial food color
 
-def move():
-    if head.direction == "up":
-        y = head.ycor()
-        head.sety(y + 20)
+    while not gameExit:
+        while gameOver == True:
+            gameDisplay.fill(red)
+            message_to_screen("Your snake has died! Press C to continue or Q to quit.", white, 180,280)
+            message_to_screen(''.join(["Your score was: ",str(score)]), white, 300, 325)
+            pygame.display.update()
 
-    if head.direction == "down":
-        y = head.ycor()
-        head.sety(y - 20)
+            for event in pygame.event.get():
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_c:
+                        gameLoop()
+                    if event.key == pygame.K_q:
+                        gameExit = True
+                        gameOver = False
+                elif event.type == pygame.QUIT:
+                    gameExit = True
+                    gameOver = False
 
-    if head.direction == "left":
-        x = head.xcor()
-        head.setx(x - 20)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                gameExit = True
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_LEFT:
+                    lead_x_change = -block_size
+                    lead_y_change = 0
+                elif event.key == pygame.K_RIGHT:
+                    lead_x_change = block_size
+                    lead_y_change = 0
+                elif event.key == pygame.K_DOWN:
+                    lead_y_change = block_size
+                    lead_x_change = 0
+                elif event.key == pygame.K_UP:
+                    lead_y_change = -block_size
+                    lead_x_change = 0
 
-    if head.direction == "right":
-        x = head.xcor()
-        head.setx(x + 20)
+        if lead_x >= display_width or lead_x <0 or lead_y >= display_height or lead_y <0:
+            gameOver = True
 
-# Start Game Function
-def start_game():
-    start_button.clear()
-    wn.listen()
-    wn.onkeypress(go_up, "w")
-    wn.onkeypress(go_down, "s")
-    wn.onkeypress(go_left, "a")
-    wn.onkeypress(go_right, "d")
-    wn.onkeypress(wn.bye, "Escape")
-    game_loop()
+        lead_x += lead_x_change
+        lead_y += lead_y_change
+        gameDisplay.fill(white)
+        message_to_screen(''.join(["Score: ",str(score)]), black, 10,10)
+        pygame.draw.rect(gameDisplay, food_color, [randAppleX, randAppleY, block_size, block_size])
 
-# Main game loop
-def game_loop():
-    global score, high_score, delay
+        snakeHead = []
+        snakeHead.append(lead_x)
+        snakeHead.append(lead_y)
+        snakeList.append(snakeHead)
 
-    while True:
-        wn.update()
+        if len(snakeList) > snakeLength:
+            del snakeList[0]
+        for eachSegment in snakeList[:-1]:
+            if eachSegment == snakeHead:
+                gameOver = True
 
-        # checking for collision with food
-        if is_collision(head, food):
-            change_food_color()
-            change_head_color()
+        snake(block_size, snakeList, snakeHead, lead_x, lead_y)
 
-        # Check for a collision with the border
-        if head.xcor() > 290 or head.xcor() < -290 or head.ycor() > 290 or head.ycor() < -290:
-            time.sleep(1)
-            head.goto(0, 0)
-            head.direction = "stop"
+        if lead_x == randAppleX and lead_y == randAppleY:
+            randAppleX = round(random.randrange(0, display_width - block_size)/block_size)*block_size
+            randAppleY = round(random.randrange(0, display_height - block_size)/block_size)*block_size
+            snakeLength += 1
+            score += 1
+            # Change food color
+            food_color = random.choice([green, blue, red, purple])
+            # Change snake head color
+            snake_head_color = random.choice([red, purple])
+            message_to_screen(''.join(["Score: ",str(score)]), black, 10,10)
 
-            # Hide the segments
-            for segment in segments:
-                segment.goto(1000, 1000)
+        pygame.display.update()
 
-            # Clear the segments list
-            segments.clear()
+        clock.tick(fps)
 
-            # Reset the score
-            score = 0
+    pygame.quit()
 
-            # Reset the delay
-            delay = 0.1
-
-            pen.clear()
-            pen.write("Score: {}  High Score: {}".format(score, high_score), align="center",
-                      font=("Courier", 24, "normal"))
-
-        # Check for a collision with the food
-        if head.distance(food) < 20:
-            # Move the food to a random spot
-            x = random.randint(-290, 290)
-            y = random.randint(-290, 290)
-            food.goto(x, y)
-
-            # change the color of the food
-            change_food_color()
-
-            # Add a segment
-            new_segment = turtle.Turtle()
-            new_segment.speed(0)
-            new_segment.shape("square")
-            new_segment.color("grey")
-            new_segment.penup()
-            segments.append(new_segment)
-
-            # Shorten the delay
-            delay -= 0.001
-
-            # Increase the score
-            score += 10
-
-            if score > high_score:
-                high_score = score
-
-            pen.clear()
-            pen.write("Score: {}  High Score: {}".format(score, high_score), align="center",
-                      font=("Courier", 24, "normal"))
-
-        # Move the end segments first in reverse order
-        for index in range(len(segments) - 1, 0, -1):
-            x = segments[index - 1].xcor()
-            y = segments[index - 1].ycor()
-            segments[index].goto(x, y)
-
-        # Move segment 0 to where the head is
-        if len(segments) > 0:
-            x = head.xcor()
-            y = head.ycor()
-            segments[0].goto(x, y)
-
-        move()
-
-        # Check for head collision with the body segments
-        for segment in segments:
-            if segment.distance(head) < 20:
-                time.sleep(1)
-                head.goto(0, 0)
-                head.direction = "stop"
-
-                # Hide the segments
-                for segment in segments:
-                    segment.goto(1000, 1000)
-
-                # Clear the segments list
-                segments.clear()
-
-                # Reset the score
-                score = 0
-
-                # Reset the delay
-                delay = 0.1
-
-                # Update the score display
-                pen.clear()
-                pen.write("Score: {}  High Score: {}".format(score, high_score), align="center",
-                          font=("Courier", 24, "normal"))
-
-                time.sleep(delay)
-
-        # Delay to control the speed of the snake
-        time.sleep(delay)
-
-# Listen for 'Enter' key press to start the game
-wn.listen()
-wn.onkeypress(start_game, "Return")
-wn.listen()
-wn.onkeypress(wn.bye, "Escape")
-
-# Keep the window open
-wn.mainloop()
+gameLoop()
